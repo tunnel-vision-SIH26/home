@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IPsec AI Shield | VPN Protocol Analyzer & Assessment</title>
+  <style>
+    :root {
+      --bg-main: #0b0f19;
+      --bg-card: #111827;
+      --bg-card-alt: #1a2234;
+      --border-color: #1f293d;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --accent-blue: #3b82f6;
+      --accent-cyan: #06b6d4;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --font-stack: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: var(--font-stack);
+      line-height: 1.5;
+      padding: 24px;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #2563eb, #06b6d4);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 20px;
+      color: #fff;
+    }
+
+    .brand-text h1 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-text p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: var(--accent-green);
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 9999px;
+    }
+
+    .pulse {
+      width: 8px;
+      height: 8px;
+      background-color: var(--accent-green);
+      border-radius: 50%;
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+      animation: pulse-ring 1.8s infinite cubic-bezier(0.66, 0, 0, 1);
+    }
+
+    @keyframes pulse-ring {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 18px 20px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .card-metric {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .card-subtext {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .grid-two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 992px) {
+      .grid-two-col {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .section-header h2 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .param-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .param-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      background-color: var(--bg-card-alt);
+      border-radius: 8px;
+      font-size: 13px;
+    }
+
+    .badge {
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-secure {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .badge-warning {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .badge-critical {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      height: 220px;
+      background-color: var(--bg-card-alt);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .terminal {
+      background: #080c14;
+      border: 1px solid #172033;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 12px;
+      height: 210px;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .log-line {
+      display: flex;
+      gap: 8px;
+    }
+
+    .log-time {
+      color: #64748b;
+    }
+
+    .log-msg-normal {
+      color: #94a3b8;
+    }
+
+    .log-msg-alert {
+      color: #f87171;
+      font-weight: 600;
+    }
+
+    .log-msg-info {
+      color: #38bdf8;
+    }
+
+    .control-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 16px;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      align-items: center;
+    }
+
+    .control-bar span {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-right: 8px;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background-color: var(--bg-card-alt);
+      color: var(--text-main);
+    }
+
+    .btn:hover {
+      background-color: #243048;
+    }
+
+    .btn-attack {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+    }
+
+    .btn-attack:hover {
+      background: rgba(239, 68, 68, 0.25);
+    }
+
+    .btn-reset {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: rgba(59, 130, 246, 0.3);
+      color: #93c5fd;
+    }
+
+    .btn-reset:hover {
+      background: rgba(59, 130, 246, 0.25);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-icon">IP</div>
+      <div class="brand-text">
+        <h1>AI IPsec VPN Analyzer & Framework</h1>
+        <p>Continuous Cryptographic Integrity & Metadata Anomaly Detection</p>
+      </div>
+    </div>
+    <div class="status-pill" id="system-status">
+      <div class="pulse" id="status-pulse"></div>
+      <span id="status-text">Tunnel Monitored: Healthy</span>
+    </div>
+  </header>
+
+  <section class="metrics-grid">
+    <div class="card">
+      <div class="card-title">VPN Security Rating</div>
+      <div class="card-metric" id="metric-score" style="color: var(--accent-green);">96/100</div>
+      <div class="card-subtext">NIST SP 800-77 Rev. 1 Compliant</div>
+    </div>
+    <div class="card">
+      <div class="card-title">AI Anomaly Risk Index</div>
+      <div class="card-metric" id="metric-risk" style="color: var(--accent-cyan);">2.1%</div>
+      <div class="card-subtext">Entropy & Packet Rhythm Analysis</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Throughput (Encrypted)</div>
+      <div class="card-metric" id="metric-throughput">18.4 MB/s</div>
+      <div class="card-subtext">Packets Analyzed: <span id="packet-counter">42,891</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Handshake Cipher Suite</div>
+      <div class="card-metric" id="metric-cipher" style="font-size: 19px; margin-top: 5px;">AES-256-GCM</div>
+      <div class="card-subtext">IKEv2 SA Validated</div>
+    </div>
+  </section>
+
+  <div class="grid-two-col">
+    <!-- Handshake & Cryptographic Assessment -->
+    <div class="card">
+      <div class="section-header">
+        <h2>Handshake Protocol Assessment</h2>
+        <span class="badge badge-secure" id="downgrade-badge">No Downgrade Attack</span>
+      </div>
+      <div class="param-list">
+        <div class="param-row">
+          <div>
+            <strong>IKE Protocol Version</strong>
+            <p style="color: var(--text-muted);">Phase 1 Key Exchange</p>
+          </div>
+          <span class="badge badge-secure" id="p-ike">IKEv2 (Strong)</span>
+        </div>
+        <div class="param-row">
+          <div>
+            <strong>Diffie-Hellman Group</strong>
+            <p style="color: var(--text-muted);">Key Agreement Strength</p>
+          </div>
+          <span class="badge badge-secure" id="p-dh">Group 19 (256-bit ECP)</span>
+        </div>
+        <div class="param-row">
+          <div>
+            <strong>ESP Encryption Algorithm</strong>
+            <p style="color: var(--text-muted);">Phase 2 Payload Confidentiality</p>
+          </div>
+          <span class="badge badge-secure" id="p-enc">AES-256-GCM</span>
+        </div>
+        <div class="param-row">
+          <div>
+            <strong>Integrity / Hash Function</strong>
+            <p style="color: var(--text-muted);">Authentication & Message Integrity</p>
+          </div>
+          <span class="badge badge-secure" id="p-hash">SHA-384 / AEAD</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Metadata Stream AI Behavior Analyzer -->
+    <div class="card">
+      <div class="section-header">
+        <h2>Live Metadata Stream (Timing & Packet Size)</h2>
+        <span style="font-size: 12px; color: var(--text-muted);">Zero-Payload Decryption</span>
+      </div>
+      <div class="canvas-container">
+        <canvas id="trafficCanvas"></canvas>
+      </div>
+      <div class="terminal" id="terminal-logs">
+        <div class="log-line">
+          <span class="log-time">[00:00:01]</span>
+          <span class="log-msg-info">Engine initialized. Continuous metadata analysis active.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Scenario Controller -->
+  <div class="control-bar">
+    <span>Interactive Scenarios:</span>
+    <button class="btn btn-reset" onclick="triggerScenario('normal')">Baseline VPN Traffic</button>
+    <button class="btn btn-attack" onclick="triggerScenario('downgrade')">Simulate Downgrade Attack (3DES)</button>
+    <button class="btn btn-attack" onclick="triggerScenario('exfiltration')">Simulate Exfiltration Spike</button>
+    <button class="btn btn-attack" onclick="triggerScenario('c2')">Simulate Malware C2 Beaconing</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("trafficCanvas");
+    const ctx = canvas.getContext("2d");
+    let currentMode = "normal";
+    let packetCount = 42891;
+    let dataPoints = new Array(50).fill(15);
+
+    function resizeCanvas() {
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    function logEvent(msg, type = "normal") {
+      const logs = document.getElementById("terminal-logs");
+      const d = new Date();
+      const timeStr = `[${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}]`;
+      
+      const el = document.createElement("div");
+      el.className = "log-line";
+      let msgClass = "log-msg-normal";
+      if (type === "alert") msgClass = "log-msg-alert";
+      if (type === "info") msgClass = "log-msg-info";
+
+      el.innerHTML = `<span class="log-time">${timeStr}</span> <span class="${msgClass}">${msg}</span>`;
+      logs.appendChild(el);
+      logs.scrollTop = logs.scrollHeight;
+    }
+
+    function triggerScenario(scenario) {
+      currentMode = scenario;
+      const statusPill = document.getElementById("system-status");
+      const statusPulse = document.getElementById("status-pulse");
+      const statusText = document.getElementById("status-text");
+      const scoreEl = document.getElementById("metric-score");
+      const riskEl = document.getElementById("metric-risk");
+      const downgradeBadge = document.getElementById("downgrade-badge");
+      const cipherEl = document.getElementById("metric-cipher");
+
+      const pIke = document.getElementById("p-ike");
+      const pDh = document.getElementById("p-dh");
+      const pEnc = document.getElementById("p-enc");
+      const pHash = document.getElementById("p-hash");
+
+      if (scenario === "normal") {
+        statusPill.style.borderColor = "rgba(16, 185, 129, 0.3)";
+        statusPill.style.background = "rgba(16, 185, 129, 0.12)";
+        statusPill.style.color = "var(--accent-green)";
+        statusPulse.style.backgroundColor = "var(--accent-green)";
+        statusText.innerText = "Tunnel Monitored: Healthy";
+
+        scoreEl.innerText = "96/100";
+        scoreEl.style.color = "var(--accent-green)";
+        riskEl.innerText = "2.1%";
+        riskEl.style.color = "var(--accent-cyan)";
+        cipherEl.innerText = "AES-256-GCM";
+
+        downgradeBadge.className = "badge badge-secure";
+        downgradeBadge.innerText = "No Downgrade Attack";
+
+        pIke.className = "badge badge-secure"; pIke.innerText = "IKEv2 (Strong)";
+        pDh.className = "badge badge-secure"; pDh.innerText = "Group 19 (256-bit ECP)";
+        pEnc.className = "badge badge-secure"; pEnc.innerText = "AES-256-GCM";
+        pHash.className = "badge badge-secure"; pHash.innerText = "SHA-384 / AEAD";
+
+        logEvent("Baseline restored. Strong ciphers enforced.", "info");
+      } 
+      else if (scenario === "downgrade") {
+        statusPill.style.borderColor = "rgba(239, 68, 68, 0.3)";
+        statusPill.style.background = "rgba(239, 68, 68, 0.12)";
+        statusPill.style.color = "var(--accent-red)";
+        statusPulse.style.backgroundColor = "var(--accent-red)";
+        statusText.innerText = "Critical: Protocol Downgrade Detected";
+
+        scoreEl.innerText = "38/100";
+        scoreEl.style.color = "var(--accent-red)";
+        riskEl.innerText = "88.4%";
+        riskEl.style.color = "var(--accent-red)";
+        cipherEl.innerText = "3DES-CBC / SHA1";
+
+        downgradeBadge.className = "badge badge-critical";
+        downgradeBadge.innerText = "Downgrade Attempt Intercepted";
+
+        pIke.className = "badge badge-warning"; pIke.innerText = "IKEv1 (Deprecated)";
+        pDh.className = "badge badge-critical"; pDh.innerText = "Group 2 (1024-bit - Weak)";
+        pEnc.className = "badge badge-critical"; pEnc.innerText = "3DES-CBC (Insecure)";
+        pHash.className = "badge badge-critical"; pHash.innerText = "HMAC-SHA1 (Broken)";
+
+        logEvent("ALERT: Remote endpoint requested deprecated 3DES-CBC and DH Group 2.", "alert");
+        logEvent("AI Action: Policy enforced. Connection negotiation terminated.", "alert");
+      } 
+      else if (scenario === "exfiltration") {
+        scoreEl.innerText = "62/100";
+        scoreEl.style.color = "var(--accent-amber)";
+        riskEl.innerText = "79.2%";
+        riskEl.style.color = "var(--accent-amber)";
+
+        statusPill.style.borderColor = "rgba(245, 158, 11, 0.3)";
+        statusPill.style.background = "rgba(245, 158, 11, 0.12)";
+        statusPill.style.color = "var(--accent-amber)";
+        statusPulse.style.backgroundColor = "var(--accent-amber)";
+        statusText.innerText = "Warning: Anomalous Outbound Transfer";
+
+        logEvent("ANOMALY: Burst transfer detected exceeding 99th percentile baseline.", "alert");
+      } 
+      else if (scenario === "c2") {
+        scoreEl.innerText = "54/100";
+        scoreEl.style.color = "var(--accent-red)";
+        riskEl.innerText = "91.7%";
+        riskEl.style.color = "var(--accent-red)";
+
+        statusPill.style.borderColor = "rgba(239, 68, 68, 0.3)";
+        statusPill.style.background = "rgba(239, 68, 68, 0.12)";
+        statusPill.style.color = "var(--accent-red)";
+        statusPulse.style.backgroundColor = "var(--accent-red)";
+        statusText.innerText = "Critical: Periodic C2 Heartbeat Rhythm";
+
+        logEvent("SIGNATURE DETECTED: Constant-interval packet rhythm matches known C2 beacon profile.", "alert");
+      }
+    }
+
+    function renderTraffic() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      let nextVal = 15;
+      if (currentMode === "normal") {
+        nextVal = 10 + Math.random() * 20;
+      } else if (currentMode === "exfiltration") {
+        nextVal = 70 + Math.random() * 25;
+      } else if (currentMode === "c2") {
+        nextVal = (dataPoints.length % 5 === 0) ? 80 : 8;
+      } else if (currentMode === "downgrade") {
+        nextVal = 5 + Math.random() * 5;
+      }
+
+      dataPoints.push(nextVal);
+      dataPoints.shift();
+
+      packetCount += Math.floor(nextVal * 2.3);
+      document.getElementById("packet-counter").innerText = packetCount.toLocaleString();
+
+      ctx.beginPath();
+      const step = canvas.width / (dataPoints.length - 1);
+      ctx.lineWidth = 2.5;
+
+      if (currentMode === "normal") {
+        ctx.strokeStyle = "#06b6d4";
+        ctx.fillStyle = "rgba(6, 182, 212, 0.15)";
+      } else if (currentMode === "exfiltration") {
+        ctx.strokeStyle = "#f59e0b";
+        ctx.fillStyle = "rgba(245, 158, 11, 0.15)";
+      } else {
+        ctx.strokeStyle = "#ef4444";
+        ctx.fillStyle = "rgba(239, 68, 68, 0.15)";
+      }
+
+      dataPoints.forEach((val, idx) => {
+        const x = idx * step;
+        const y = canvas.height - (val / 100) * canvas.height;
+        if (idx === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+
+      ctx.stroke();
+
+      ctx.lineTo(canvas.width, canvas.height);
+      ctx.lineTo(0, canvas.height);
+      ctx.closePath();
+      ctx.fill();
+
+      requestAnimationFrame(() => {
+        setTimeout(renderTraffic, 120);
+      });
+    }
+
+    renderTraffic();
+  </script>
+</body>
+</html>
+
